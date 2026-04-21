@@ -45,4 +45,8 @@ sudo ./svc.sh start
 
 # to verify it 
 sudo ./svc.sh status
+
+
+# For auto-start
+sudo systemctl enable actions.runner.*
 ```
