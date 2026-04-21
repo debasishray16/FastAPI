@@ -47,3 +47,9 @@ def create_item(item: Item):
         "total_price": total_price,
         "message": "Item created successfully"
     }
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy"}

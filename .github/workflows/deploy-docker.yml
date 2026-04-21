@@ -49,4 +49,24 @@ jobs:
               --restart unless-stopped \
               fastapi-app:latest
             
-            echo "Docker deployment completed successfully!"
+            # Wait for container to start
+            sleep 5
+            
+            # Verify container is running
+            echo "=== Checking Docker Container Status ==="
+            docker ps --filter "name=fastapi-app"
+            
+            # Check container logs
+            echo "=== Container Logs ==="
+            docker logs fastapi-app
+            
+            # Verify the app is responding
+            echo "=== Verifying Application Health ==="
+            if curl -s http://localhost:8000/ | grep -q "Welcome to FastAPI"; then
+              echo "✓ FastAPI is running and responding!"
+            else
+              echo "✗ FastAPI is not responding properly"
+              exit 1
+            fi
+            
+            echo "✓ Docker deployment completed successfully!"
