@@ -1,0 +1,53 @@
+name: Deploy FastAPI with Docker to VM
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy Docker container to VM via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_SSH_PORT || 22 }}
+          script: |
+            # Create FastAPI-Docker folder if it doesn't exist
+            mkdir -p /home/${{ secrets.VM_USER }}/FastAPI-Docker
+            
+            cd /home/${{ secrets.VM_USER }}/FastAPI-Docker
+            
+            # Initialize git repo if it doesn't exist
+            if [ ! -d .git ]; then
+              git init
+              git remote add origin ${{ github.server_url }}/${{ github.repository }}.git
+            fi
+            
+            # Pull latest code
+            git pull origin main
+            
+            # Remove old container if exists
+            docker stop fastapi-app || true
+            docker rm fastapi-app || true
+            
+            # Build new image
+            docker build -t fastapi-app:latest .
+            
+            # Run new container
+            docker run -d \
+              --name fastapi-app \
+              -p 8000:8000 \
+              --restart unless-stopped \
+              fastapi-app:latest
+            
+            echo "Docker deployment completed successfully!"
